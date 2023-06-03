@@ -37,24 +37,16 @@ wallet_join.click()
 terms = driver.find_element(By.CSS_SELECTOR, '.mat-checkbox-input')
 driver.execute_script("arguments[0].click();", terms)
 
-# platforms = driver.find_element(By.CSS_SELECTOR, '.app-network-item')
-
-# for platform in platforms:
-#     if 'Polygon' in platform.text:
-#         platform.click()
-#         break
-
 wallets = WebDriverWait(driver, 20).until(
-    EC.visibility_of_element_located((By.CSS_SELECTOR, '[data-id="Web3"]'))
-)
+    EC.visibility_of_element_located((By.CSS_SELECTOR, '[data-id="Web3"]')))
 wallets.click()
 
-install_meta_mask = wait.until(
-    EC.element_to_be_clickable(By.CSS_SELECTOR, '.dd-Va'))
+time.sleep(15)
+
+install_meta_mask = wait.until(EC.presence_of_element_located(
+    (By.CSS_SELECTOR, 'div[aria-label="Установить"]')))
+
 install_meta_mask.click()
 
-ActionChains(driver).send_keys(Keys.TAB).perform()
-ActionChains(driver).send_keys(Keys.ENTER).perform()
-
-
-time.sleep(5)
+# ActionChains(driver).send_keys(Keys.TAB).perform()
+# ActionChains(driver).send_keys(Keys.ENTER).perform()
