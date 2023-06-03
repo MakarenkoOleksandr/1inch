@@ -1,71 +1,60 @@
-import requests
-import time
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.keys import Keys
+import time
 
 
-driver = webdriver.Chrome()
-driver.get("https://app.1inch.io/")
-wait = WebDriverWait(driver, 10)
-element = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, ".header-button.header-button-smoke-blue")))
+chromedriver_path = 'D:/python/chromedriver.exe'
+
+service = Service(chromedriver_path)
+driver = webdriver.Chrome(service=service)
+
+# Заходим на страницу
+driver.get('https://app.1inch.io/')
+wait = WebDriverWait(driver, 20)
+
+# Выбираем монету
+coin_list = wait.until(EC.element_to_be_clickable(
+    (By.CSS_SELECTOR, '.header-button')))
+coin_list.click()
+
+coins = driver.find_elements(By.CLASS_NAME, 'switch-network-item')
+
+for coin in coins:
+    if 'Arbitrum' in coin.text:
+        driver.execute_script("arguments[0].click();", coin)
+        break
+
+# Подключаем кошелек
+wallet_join = wait.until(EC.element_to_be_clickable(
+    (By.CSS_SELECTOR, '.header-button-light-blue')))
+wallet_join.click()
+
+terms = driver.find_element(By.CSS_SELECTOR, '.mat-checkbox-input')
+driver.execute_script("arguments[0].click();", terms)
+
+# platforms = driver.find_element(By.CSS_SELECTOR, '.app-network-item')
+
+# for platform in platforms:
+#     if 'Polygon' in platform.text:
+#         platform.click()
+#         break
+
+wallets = WebDriverWait(driver, 20).until(
+    EC.visibility_of_element_located((By.CSS_SELECTOR, '[data-id="Web3"]'))
+)
+wallets.click()
+
+install_meta_mask = wait.until(
+    EC.element_to_be_clickable(By.CSS_SELECTOR, '.dd-Va'))
+install_meta_mask.click()
+
+ActionChains(driver).send_keys(Keys.TAB).perform()
+ActionChains(driver).send_keys(Keys.ENTER).perform()
 
 
-time.sleep(1)
-
-# Выполнить клик на элемент
-element.click()
-
-# Закрыть браузер
-driver.quit()
-
-# def choose_platform(platform):
-#     swap_url = "https://app.1inch.io/"
-
-
-# def account_log_in():
-
-
-# def swap_tokens(api_key, from_token, to_token, amount):
-
-#     # URL для совершения обмена на сервисе 1inch
-#     swap_url = "https://app.1inch.io/#/42161/simple/swap/ETH/USDT"
-
-#     payload = {
-#         "fromTokenAddress": from_token,
-#         "toTokenAddress": to_token,
-#         "amount": amount,
-#         "fromAddress": "your_ethereum_address",
-#         "slippage": 1
-#     }
-
-#     headers = {
-#         "Authorization": f"Bearer {api_key}"
-#     }
-
-#     response = requests.post(swap_url, json=payload, headers=headers)
-
-#     if response.status_code == 200:
-#         swap_data = response.json()
-#         # Обработка данных об обмене
-#         return swap_data
-#     else:
-#         # Обработка ошибок
-#         return None
-
-# # Пример использования функции обмена токенов
-# api_key = "your_api_key"
-# from_token = "0x0000000000000000000000000000000000000000"  # Адрес токена Ethereum (ETH)
-# to_token = "0x0000000000000000000000000000000000000000"  # Адрес токена Tether (USDT)
-# amount = 1.0  # Количество токенов для обмена
-
-# swap_result = swap_tokens(api_key, from_token, to_token, amount)
-# if swap_result:
-#     print("Успешно выполнен обмен:")
-#     print("Входящий токен:", swap_result["fromToken"]["symbol"])
-#     print("Исходящий токен:", swap_result["toToken"]["symbol"])
-#     print("Количество входящего токена:", swap_result["fromToken"]["amount"])
-#     print("Количество исходящего токена:", swap_result["toToken"]["amount"])
-# else:
-#     print("Не удалось выполнить обмен.")
+time.sleep(5)
