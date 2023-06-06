@@ -1,52 +1,51 @@
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.common.keys import Keys
-import time
+import requests
+from web3 import Web3
 
 
-chromedriver_path = 'D:/python/chromedriver.exe'
+def make_trade(from_token, to_token, amount, slippage, wallet_address, private_key):
 
-service = Service(chromedriver_path)
-driver = webdriver.Chrome(service=service)
+    chainId = 1
+    endpoint = 'https://api.1inch.io/v5.0/{}/tokens'.format(chainId)
 
-# Заходим на страницу
-driver.get('https://app.1inch.io/')
-wait = WebDriverWait(driver, 20)
+    # Подключение к Ethereum сети
+    w3 = Web3(Web3.HTTPProvider(
+        'https://mainnet.infura.io/v3/11092226beac4a518fa83083426e882f'))
 
-# Выбираем монету
-coin_list = wait.until(EC.element_to_be_clickable(
-    (By.CSS_SELECTOR, '.header-button')))
-coin_list.click()
+    # Получение Nonce для создания транзакции
+    nonce = w3.eth.get_transaction_count(wallet_address)
 
-coins = driver.find_elements(By.CLASS_NAME, 'switch-network-item')
+    # Создание объекта транзакции
+    transaction = {
+        'from': wallet_address,
+        'to': endpoint,
+        'data': {
+            'fromTokenAddress': from_token,
+            'toTokenAddress': to_token,
+            'amount': amount,
+            'fromAddress': wallet_address,
+            'slippage': slippage
+        },
+        'nonce': nonce,
+        # Пример установки цены газа
+        'gasPrice': w3.toWei(100, 'gwei'),
+        'gas': 300000  # Пример установки лимита газа
+    }
 
-for coin in coins:
-    if 'Arbitrum' in coin.text:
-        driver.execute_script("arguments[0].click();", coin)
-        break
+    # Подпись транзакции с использованием приватного ключа
+    signed_transaction = w3.eth.account.signTransaction(
+        transaction, private_key)
 
-# Подключаем кошелек
-wallet_join = wait.until(EC.element_to_be_clickable(
-    (By.CSS_SELECTOR, '.header-button-light-blue')))
-wallet_join.click()
+    # Отправка подписанной транзакции
+    response = w3.eth.sendRawTransaction(signed_transaction.rawTransaction)
 
-terms = driver.find_element(By.CSS_SELECTOR, '.mat-checkbox-input')
-driver.execute_script("arguments[0].click();", terms)
+    if response:
+        tx_hash = response.hex()
+        print(
+            f'Транзакция отправлена. Хеш транзакции: {tx_hash}')
+    else:
+        print('Произошла ошибка при выполнении обмена.')
 
-wallets = WebDriverWait(driver, 20).until(
-    EC.visibility_of_element_located((By.CSS_SELECTOR, '[data-id="Web3"]')))
-wallets.click()
 
-time.sleep(15)
-
-install_meta_mask = wait.until(EC.presence_of_element_located(
-    (By.CSS_SELECTOR, 'div[aria-label="Установить"]')))
-
-install_meta_mask.click()
-
-# ActionChains(driver).send_keys(Keys.TAB).perform()
-# ActionChains(driver).send_keys(Keys.ENTER).perform()
+# Пример использования функции
+make_trade('0x0123456789abcdefABCDEF0123456789abcdef', '0x...', 0.0001, 1, '0x2065cc411803b37d7dc1ef31307ef066092b971e',
+           '0x471746a9e3fae01b52ef4e833fc37c553db4ce5110d3a7876cb418150b3a379d')
