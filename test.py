@@ -35,8 +35,7 @@ def get_contract():
         abi = json.load(f)
     token_contract = web3.eth.contract(address=tx_to, abi=abi)
 
-    approve_tx = token_contract.functions.transferFrom(from_token_address, to_token_address, sender_address, uint256)
-    ).build_transaction({
+    approve_tx = token_contract.functions.transferFrom(from_token_address, to_token_address, sender_address, from_token_amount).build_transaction({
         'from': sender_address,
         'nonce': nonce,
         'value': 1,
