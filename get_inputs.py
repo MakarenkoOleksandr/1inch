@@ -7,12 +7,14 @@ def get_inputs():
     parser.add_argument("--network", required=True, help="Network name")
     parser.add_argument("--start_token", required=True, help="Start token")
     parser.add_argument("--end_token", required=True, help="End token")
+    parser.add_argument("--amount", required=True, help="Amount")
 
     args = parser.parse_args()
 
     network = args.network
     start_token = args.start_token
     end_token = args.end_token
+    amount = args.amount
 
     if network == 'Ethereum':
         network = 1
@@ -36,4 +38,4 @@ def get_inputs():
         network = 1313161554
     if network == 'ZKSync Era':
         network = 324
-    return network, start_token, end_token
+    return network, start_token, end_token, amount
