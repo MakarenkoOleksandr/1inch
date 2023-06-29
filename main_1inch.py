@@ -1,13 +1,7 @@
-import os
-from get_inputs import *
-from get_token_adress import *
-from dotenv import load_dotenv
-from swap_tokens import *
+from get_inputs import get_inputs
+from interactive_inputs import interactive_inputs
 
-load_dotenv()
-wallet_address = os.getenv('PRIVATE_ADDRESS')
+interactive_inputs()
 
-network, start_token, end_token, amount = get_inputs()
-get_tokens_API(network)
-start_address, end_address = get_token_address(start_token, end_token)
-# python main_1inch.py --network "BNB Chain" --start_token "BNB" --end_token DAI --amount 0.001
+
+# python main_1inch.py --chain "BNB" --start_token "BNB" --end_token DAI --amount 0.001
