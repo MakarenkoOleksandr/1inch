@@ -1,6 +1,6 @@
 .idea/
 .vscode/
-.__pucache__/
+.__pycache__/
 .env
 .DS_Store
 node_modules/
