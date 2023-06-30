@@ -10,13 +10,14 @@ chain_id = 56
 web3_rpc_url = os.getenv('BNB_RPC_URL')
 wallet_address = os.getenv('PRIVATE_ADDRESS')
 private_key = os.getenv('PRIVATE_KEY')
+amount = 1000000000000000
 
 swap_params = {
     'fromTokenAddress': '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
     'toTokenAddress': '0x2170ed0880ac9a755fd29b2688956bd959f933f8',
-    'amount': '1000000000000000',
+    'amount': amount,
     'value': '0',
-    'fromAddress': wallet_address,
+    'fromAddress': Web3.to_checksum_address(wallet_address),
     'slippage': 1,
     'disableEstimate': False,
     'allowPartialFill': False,
@@ -31,65 +32,58 @@ def api_request_url(method_name, query_params):
     return f'{api_base_url}{method_name}?{urlencode(query_params)}'
 
 
-async def check_allowance(token_address, wallet_address):
-    response = requests.get(api_request_url(
-        '/approve/allowance', {'tokenAddress': token_address, 'walletAddress': wallet_address}))
-    res = response.json()
-    return res['allowance']
+async def build_tx_for_approve_trade_with_router(token_address, amount=None):
+    query_params = {'tokenAddress': token_address}
+    if amount:
+        query_params['amount'] = amount
+    url = api_request_url('/approve/transaction', query_params)
+    response = requests.get(url)
+    transaction = response.json()
+    transaction['to'] = Web3.to_checksum_address(transaction['to'])
+    gas_limit = web3.eth.estimate_gas(
+        {**transaction, 'from': Web3.to_checksum_address(wallet_address)})
+    transaction['gas'] = gas_limit
+    return transaction
 
 
-def broad_cast_raw_transaction(raw_transaction):
+async def broad_cast_raw_transaction(raw_transaction):
     response = requests.post(broadcast_api_url, json={
                              'rawTransaction': raw_transaction}, headers={'Content-Type': 'application/json'})
     res = response.json()
     return res['transactionHash']
 
 
-# async def signAndSendTransaction(transaction):
-#     rawTransaction = web3.eth.account.sign_transaction(
-#         transaction, private_key=privateKey)['rawTransaction']
-#     return await broadCastRawTransaction(rawTransaction)
+async def sign_and_send_transaction(transaction):
+    raw_transaction = web3.eth.account.sign_transaction(
+        transaction, private_key=private_key)['rawTransaction']
+    return await broad_cast_raw_transaction(raw_transaction)
 
 
-# async def buildTxForApproveTradeWithRouter(tokenAddress, amount=None):
-#     queryParams = {'tokenAddress': tokenAddress}
-#     if amount:
-#         queryParams['amount'] = amount
-#     url = apiRequestUrl('/approve/transaction', queryParams)
-#     response = requests.get(url)
-#     transaction = response.json()
-#     gasLimit = web3.eth.estimate_gas({**transaction, 'from': walletAddress})
-#     transaction['gas'] = gasLimit
-#     return transaction
-
-
-# async def buildTxForSwap(swapParams):
-#     url = apiRequestUrl('/swap', swapParams)
-#     response = requests.get(url)
-#     res = response.json()
-#     return res['tx']
+async def build_tx_for_swap(swapParams):
+    url = api_request_url('/swap', swapParams)
+    response = requests.get(url)
+    res = response.json()
+    res['tx']['nonce'] = web3.eth.get_transaction_count(wallet_address)
+    res['tx']['to'] = Web3.to_checksum_address(res['tx']['to'])
+    res['tx']['value'] = web3.to_wei(swap_params['amount'], 'wei')
+    res['tx']['gasPrice'] = web3.to_wei(1.5, 'gwei')
+    return res['tx']
 
 
 async def main():
-    allowance = await check_allowance(swap_params['fromTokenAddress'], wallet_address)
-    print('Allowance:', allowance)
+    transaction_for_sign = await build_tx_for_approve_trade_with_router(Web3.to_checksum_address(swap_params['fromTokenAddress']), swap_params['amount'])
+    print('Transaction for approve:', transaction_for_sign)
 
-    balance = web3.eth.get_balance(wallet_address)
-    print('Account balance:', web3.from_wei(balance, 'wei'))
+    swap_transaction = await build_tx_for_swap(swap_params)
+    print('Transaction for swap:', swap_transaction)
 
-#     transactionForSign = await buildTxForApproveTradeWithRouter(swapParams['fromTokenAddress'], swapParams['amount'])
-#     print('Transaction for approve:', transactionForSign)
+    ok = input(
+        'Do you want to send a transaction to exchange with 1inch router? (y/n): ')
 
-#     swapTransaction = await buildTxForSwap(swapParams)
-#     print('Transaction for swap:', swapTransaction)
+    if ok.lower() != 'y':
+        return False
 
-#     ok = input(
-#         'Do you want to send a transaction to exchange with 1inch router? (y/n): ')
-
-#     if ok.lower() != 'y':
-#         return False
-
-#     swapTxHash = await signAndSendTransaction(swapTransaction)
-#     print('Transaction Signed and Sent:', swapTxHash)
+    swap_tx_hash = await sign_and_send_transaction(swap_transaction)
+    print('Transaction Signed and Sent:', swap_tx_hash)
 
 asyncio.run(main())
