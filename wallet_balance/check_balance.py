@@ -14,7 +14,7 @@ with open('./json_files/erc20.json') as f:
 w3 = web3
 
 
-def get_balance(token, wallet):
+async def get_balance(token, wallet):
     token_contract = w3.eth.contract(
         address=Web3.to_checksum_address(token), abi=token_abi)
     balance = token_contract.functions.balanceOf(wallet).call()
@@ -22,7 +22,7 @@ def get_balance(token, wallet):
     return balance
 
 
-def converter_to_usd(token_name, token_symbol, token_balance):
+async def convert_to_usd(token_name, token_symbol, token_balance):
     url = 'https://pro-api.coinmarketcap.com/v2/tools/price-conversion'
 
     parameters = {
@@ -49,17 +49,17 @@ def converter_to_usd(token_name, token_symbol, token_balance):
         f"Баланс токена {token_name}: ~ {token_balance} ~ {balance_in_usd} $")
 
 
-def get_tokens_balance():
+async def get_tokens_balance():
     native_token_balance = w3.eth.get_balance(wallet)
     native_token_balance = w3.from_wei(native_token_balance, 'ether')
     for token in tokens:
         if token['address'] == '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee':
-            native_token_balance = converter_to_usd(
+            native_token_balance = await convert_to_usd(
                 tokens[0]['name'], tokens[0]['symbol'], native_token_balance)
 
         else:
-            token_balance = get_balance(token['address'], wallet)
+            token_balance = await get_balance(token['address'], wallet)
             if token_balance > 0:
                 token_balance = w3.from_wei(token_balance, 'ether')
-                token_balance = converter_to_usd(
+                token_balance = await convert_to_usd(
                     token['name'], token['symbol'], token_balance)

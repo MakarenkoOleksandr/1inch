@@ -13,12 +13,10 @@ def interactive_inputs():
 
         if choice == "1":
             get_tokens_data()
-            break
 
         elif choice == "2":
             print("Вы выбрали действие 2.")
             # Здесь можно добавить код для выполнения действия 2
-            break
 
         elif choice == "3":
             print("До свидания!")

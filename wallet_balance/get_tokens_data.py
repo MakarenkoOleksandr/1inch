@@ -2,6 +2,7 @@ import json
 import requests
 from variables import api_1inch, chain
 from wallet_balance.check_balance import get_tokens_balance
+import asyncio
 
 
 def get_tokens_data():
@@ -25,4 +26,4 @@ def get_tokens_data():
     with open('./json_files/tokens.json', 'w') as f:
         json.dump(tokens, f, indent=4)
 
-    get_tokens_balance()
+    asyncio.run(get_tokens_balance())
