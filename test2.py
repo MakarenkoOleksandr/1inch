@@ -46,6 +46,7 @@ async def build_approve_transaction():
     responce = requests.get(url)
     approve_transaction_data = responce.json()
     approve_transaction_data['gasPrice'] = web3.to_wei(1.5, 'gwei')
+    approve_transaction_data['gas'] = 25000
     return approve_transaction_data
 
 
@@ -66,21 +67,27 @@ async def build_swap_transaction(wallet_address, amount):
 
 
 async def broadcast_raw_transaction(raw_transaction):
-    headers = {'Content-Type': 'application/json'}
-    data = json.dumps(str(raw_transaction))
+    payload = {
+        'rawTransaction': raw_transaction,
+    }
+    headers = {
+        'Content-Type': 'application/json',
+    }
 
-    async with aiohttp.ClientSession() as session:
-        async with session.post(broadcast_api_url, json=data, headers=headers) as response:
-            response_data = await response.json()
-            print(response_data)
-            # transaction_hash = response_data['transactionHash']
-            # return transaction_hash
+    response = requests.post(
+        broadcast_api_url, json=payload, headers=headers)
+    response_data = response.json()
+    print(response_data)
+    transaction_hash = response_data.get('transactionHash')
+
+    return transaction_hash
 
 
 async def sign_and_send_transaction(transaction):
     raw_transaction = web3.eth.account.sign_transaction(
-        transaction, private_key)
-    return await broadcast_raw_transaction(raw_transaction)
+        transaction, private_key).rawTransaction
+    raw_transaction_str = to_hex(raw_transaction)
+    return await broadcast_raw_transaction(raw_transaction_str)
 
 
 async def main():
