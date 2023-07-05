@@ -1,15 +1,22 @@
-import json
 import requests
-from variables import api_1inch, chain
-from wallet_balance.check_balance import get_tokens_balance
 import asyncio
+import json
+import os
+from modules.check_balance import get_tokens_balance
+from modules.get_chain_and_rpc import chain
+from dotenv import load_dotenv
 
+load_dotenv()
+
+api_1inch = 'https://api.1inch.io/v5.0/'
+wallet = os.getenv('PRIVATE_ADDRESS')
 
 def get_tokens_data():
 
     url = f'{api_1inch}{chain}/tokens'
     response = requests.get(url)
     token_data = response.json()
+
     tokens = []
 
     for token in token_data['tokens']:

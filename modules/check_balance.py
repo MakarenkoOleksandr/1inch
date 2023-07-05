@@ -1,17 +1,29 @@
-from variables import wallet, web3, converter_private
+import os
 from web3 import Web3
 import json
 from requests.exceptions import ConnectionError, Timeout, TooManyRedirects
 from requests import Session
 from decimal import Decimal, ROUND_HALF_UP
+from dotenv import load_dotenv
+from modules.get_chain_and_rpc import rpc
 
+load_dotenv()
+
+#Provider
+web3 = Web3(Web3.HTTPProvider(rpc))
+w3 = web3
+
+#Private
+wallet = os.getenv('PRIVATE_ADDRESS')
+wallet_private = os.getenv('PRIVATE_KEY')
+converter_private = os.getenv('COINMARKET_PRIVATE')
+
+#Json
 with open('./json_files/tokens.json') as f:
     tokens = json.load(f)
 
 with open('./json_files/erc20.json') as f:
     token_abi = json.load(f)
-
-w3 = web3
 
 
 async def get_balance(token, wallet):
