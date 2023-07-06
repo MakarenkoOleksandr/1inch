@@ -2,7 +2,7 @@ import requests
 import asyncio
 import json
 import os
-from modules.check_balance import get_tokens_balance
+from modules.check_balance import main
 from modules.get_chain_and_rpc import chain
 from dotenv import load_dotenv
 
@@ -33,4 +33,4 @@ def get_tokens_data():
     with open('./json_files/tokens.json', 'w') as f:
         json.dump(tokens, f, indent=4)
 
-    asyncio.run(get_tokens_balance())
+    asyncio.run(main())
