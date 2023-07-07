@@ -23,10 +23,12 @@ def get_tokens_data():
         name = token_data['tokens'][token]['name']
         address = token_data['tokens'][token]['address']
         symbol = token_data['tokens'][token]['symbol']
+        decimals = token_data['tokens'][token]['decimals']
         token = {
             'name': name,
             'symbol': symbol,
-            'address': address
+            'address': address,
+            'decimals': decimals
         }
         tokens.append(token)
 

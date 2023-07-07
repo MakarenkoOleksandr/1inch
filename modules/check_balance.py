@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from web3 import Web3
 import aiohttp
 from modules.get_chain_and_rpc import rpc
+import time
 
 load_dotenv()
 
@@ -31,7 +32,8 @@ class TokenBalanceChecker:
 
         return balance
 
-    async def convert_to_usd(self, token_name, token_symbol, token_balance):
+    async def convert_to_usd(self, token_symbol, token_balance):
+
         url = 'https://pro-api.coinmarketcap.com/v2/tools/price-conversion'
 
         parameters = {
@@ -52,7 +54,7 @@ class TokenBalanceChecker:
                 print(e)
 
         balance_in_usd = price.quantize(Decimal('0.00'), rounding=ROUND_HALF_UP)
-        print(f"Token balance for {token_name}: ~ {token_balance} ~ {balance_in_usd} $")
+        print(f"Token balance for {token_symbol}: ~ {token_balance} ~ {balance_in_usd} $")
 
     async def get_tokens_balance(self):
         self.web3 = Web3(Web3.HTTPProvider(self.rpc))
@@ -61,16 +63,20 @@ class TokenBalanceChecker:
 
         for token in self.tokens:
             if token['address'] == '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee':
-                await self.convert_to_usd(
-                    self.tokens[0]['name'], self.tokens[0]['symbol'], native_token_balance)
+                await self.convert_to_usd(self.tokens[0]['symbol'], native_token_balance)
             else:
                 token_balance = await self.get_balance(token['address'], self.wallet)
                 if token_balance > 0:
                     token_balance = self.web3.from_wei(token_balance, 'ether')
-                    await self.convert_to_usd(
-                        token['name'], token['symbol'], token_balance)
+                    await self.convert_to_usd(token['symbol'], token_balance)
 
 
 async def main():
+    start_time = time.time()
+    
     balance_checker = TokenBalanceChecker()
     await balance_checker.get_tokens_balance()
+
+    end_time = time.time()
+    execution_time = end_time - start_time
+    print("Скрипт выполнен за", execution_time, "секунд.")
