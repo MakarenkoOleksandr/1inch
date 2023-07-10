@@ -6,6 +6,7 @@ from web3 import Web3
 import aiohttp
 from modules.get_chain_and_rpc import rpc
 import time
+from modules.get_tokens_data import get_tokens_data
 
 load_dotenv()
 
@@ -71,12 +72,16 @@ class TokenBalanceChecker:
                     await self.convert_to_usd(token['symbol'], token_balance)
 
 
-async def main():
-    start_time = time.time()
-    
-    balance_checker = TokenBalanceChecker()
-    await balance_checker.get_tokens_balance()
+    async def main():
+        start_time = time.time()
+        
+        get_tokens_data()
+        
+        await balance_checker.get_tokens_balance()
 
-    end_time = time.time()
-    execution_time = end_time - start_time
-    print("Скрипт выполнен за", execution_time, "секунд.")
+        end_time = time.time()
+        execution_time = end_time - start_time
+        print("Скрипт выполнен за", execution_time, "секунд.")
+
+
+balance_checker = TokenBalanceChecker()

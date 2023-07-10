@@ -1,16 +1,11 @@
 import os
 from dotenv import load_dotenv
+from modules.get_chain_input import user_chain_input
 
 load_dotenv()
 
 eth_rpc = os.getenv('ETHERIUM_RPC_URL')
 bnb_rpc = os.getenv('BNB_RPC_URL')
-
-
-def user_chain_input():
-    user_input = input('Choose the network`s chain: ')  
-    correct_user_input = check_chain_input(user_input)
-    return correct_user_input
 
 def get_chain_and_rpc(chain_name):
     chain = True
@@ -50,15 +45,6 @@ def get_chain_and_rpc(chain_name):
     # if chain_name == 'zksync Era':
     #     chain = 324
     return chain, rpc
-
-def check_chain_input(user_input):
-    while True:
-        valid_chains = ['ethereum', 'bnb', 'polygon', 'optimism', 'arbitrum',
-                        'gnosis', 'avalanche', 'fantom', 'klaytn', 'aurora', 'zksync era']
-        if user_input not in valid_chains:
-            print("Invalid chain. Please try again.")
-            user_input = user_chain_input()
-        return user_input
  
-user_input = user_chain_input()
-chain, rpc = get_chain_and_rpc(user_input)
+user_input_chain = user_chain_input()
+chain, rpc = get_chain_and_rpc(user_input_chain)
