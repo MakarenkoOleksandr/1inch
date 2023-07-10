@@ -1,6 +1,5 @@
 .idea/
 .vscode/
-.wallet_balance/__pycache__/
 .env
 .DS_Store
 node_modules/
@@ -8,4 +7,4 @@ yarn.lock
 package-lock.json
 .__pycache__/
 .gitignore
-./test.py
+./test
