@@ -14,6 +14,9 @@ web3 = Web3(Web3.HTTPProvider(rpc))
 
 wallet = os.getenv('PRIVATE_ADDRESS')
 private_key = os.getenv('PRIVATE_KEY')
+
+def get_tokens_amount_for_swap():
+    
 amount = 100000000000000
 from_token_address = '0x1af3f329e8be154074d8769d1ffa4ee058b1dbc3'
 to_token_address = '0x3ee2200efb3400fabb9aacf31297cbdd1d435d47'
@@ -41,7 +44,7 @@ def check_allowance():
     url = api_request_url('/approve/allowance', query_params)
     responce = requests.get(url)
     allowance = responce.json()
-
+    
     return allowance
 
 
@@ -53,10 +56,42 @@ def build_approve_transaction():
 
     url = api_request_url('/approve/transaction', query_params)
     response = requests.get(url)
-    approve_transaction_data = response.json()
-    approve_transaction_data['gasPrice'] = web3.to_wei(1.5, 'gwei')
+    transaction_data = response.json()
+    transaction_data['to'] = web3.to_checksum_address(transaction_data['to'])
+    transaction_data['value'] = int(transaction_data['value'])
+    transaction_data['gasPrice'] = int(web3.to_wei(1.5, 'gwei'))
+    transaction_data['gas'] = int(250000)
+    transaction_data['chainId'] = int(chain)
+    transaction_data['nonce'] = web3.eth.get_transaction_count(wallet)
 
-    return approve_transaction_data
+    return sign_and_send_transaction(transaction_data)
+
+
+def sign_and_send_transaction(transaction):
+    sign_transaction = web3.eth.account.sign_transaction(transaction, private_key)
+    tx = sign_transaction.rawTransaction
+    tx = {'rawTransaction': tx.hex()}
+    return broadcast_raw_transaction(tx)
+
+
+def build_swap_transaction():
+    url = api_request_url('/swap', query_params=swap_params_api)
+
+    response = requests.get(url)
+    transaction_data = response.json()
+    transaction_data = transaction_data['tx']
+
+    transaction_data['from'] = web3.to_checksum_address(wallet)
+    transaction_data['to'] = web3.to_checksum_address(transaction_data['to'])
+    transaction_data['value'] = int(transaction_data['value'])
+    transaction_data['gasPrice'] = int(web3.to_wei(1.5, 'gwei'))
+    transaction_data['gas'] = int(transaction_data['gas'] * 1.25)
+    transaction_data['chainId'] = int(chain)
+    transaction_data['nonce'] = web3.eth.get_transaction_count(wallet)
+    
+    print(transaction_data)
+    
+    return sign_and_send_transaction(transaction_data)
 
 
 def broadcast_raw_transaction(tx):
@@ -76,61 +111,9 @@ def broadcast_raw_transaction(tx):
     return receipt, tx_hash
     
 
-
-def sign_and_send_transaction(transaction):
-    sign_transaction = web3.eth.account.sign_transaction(transaction, private_key)
-    tx = sign_transaction.rawTransaction
-    tx = {'rawTransaction': tx.hex()}
-    return broadcast_raw_transaction(tx)
-
-
-def build_swap_transaction():
-    url = api_request_url('/swap', query_params=swap_params_api)
-
-    response = requests.get(url)
-    swap_transaction_data = response.json()
-    swap_transaction_data = swap_transaction_data['tx']
-
-    swap_transaction_data['from'] = web3.to_checksum_address(wallet)
-    swap_transaction_data['to'] = web3.to_checksum_address(swap_transaction_data['to'])
-    swap_transaction_data['value'] = int(swap_transaction_data['value'])
-    swap_transaction_data['gasPrice'] = int(web3.to_wei(1.5, 'gwei'))
-    swap_transaction_data['gas'] = int(swap_transaction_data['gas'] * 1.25)
-    swap_transaction_data['chainId'] = int(chain)
-    swap_transaction_data['nonce'] = web3.eth.get_transaction_count(wallet)
-    
-    print(swap_transaction_data)
-    
-    return sign_and_send_transaction(swap_transaction_data)
-
-
 def main():
-        # swap_manager.set_swap_params()
-
-        # allowance = await swap_manager.check_allowance()
-        # print('Allowance: ', allowance)
-        # if int(allowance['allowance']) == 0:
-        #     print('Your allowance is low. Need get approval')
-            
-        #     approve_transaction = await swap_manager.build_approve_transaction()
-        #     print('Transaction for approval:', approve_transaction)
-            
-        #     while True:
-        #         try:
-        #             approve_transaction_tx = await swap_manager.sign_and_send_transaction(approve_transaction)
-        #             print('Transaction hash:', approve_transaction_tx)
-        #             break
-        #         except:
-        #             answer = input('Во время подтверждения токена произошел сбой. Повторить транзакцию? (Введите "ok" для повтора) ')
-        #             if answer != 'ok':
-        #                 print('Вы отменили обмен')
-        #                 return False
-        # else:
-        #     print('Failed to build approval transaction.')
-
-
-    swap_transaction = build_swap_transaction()
-    
-
-                    
-
+    check_token_allowance = check_allowance()
+    if check_token_allowance['allowance'] == '0':
+        build_approve_transaction()   
+    else:
+        swap_transaction = build_swap_transaction()
