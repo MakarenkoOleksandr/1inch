@@ -8,4 +8,4 @@ yarn.lock
 package-lock.json
 .__pycache__/
 .gitignore
-test.py
+./test.py
