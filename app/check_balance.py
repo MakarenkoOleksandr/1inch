@@ -10,7 +10,6 @@ from modules.get_tokens_data import get_tokens_data
 
 load_dotenv()
 
-
 class TokenBalanceChecker:
     def __init__(self):
         self.rpc = rpc
@@ -26,12 +25,14 @@ class TokenBalanceChecker:
         with open('./json_files/erc20.json') as abi_file:
             self.token_abi = json.load(abi_file)
 
+
     async def get_balance(self, token, wallet):
         token_contract = self.web3.eth.contract(
             address=self.web3.to_checksum_address(token), abi=self.token_abi)
         balance = token_contract.functions.balanceOf(wallet).call()
 
         return balance
+
 
     async def convert_to_usd(self, token_symbol, token_balance):
 
@@ -56,6 +57,7 @@ class TokenBalanceChecker:
 
         balance_in_usd = price.quantize(Decimal('0.00'), rounding=ROUND_HALF_UP)
         print(f"Token balance for {token_symbol}: ~ {token_balance} ~ {balance_in_usd} $")
+
 
     async def get_tokens_balance(self):
         self.web3 = Web3(Web3.HTTPProvider(self.rpc))

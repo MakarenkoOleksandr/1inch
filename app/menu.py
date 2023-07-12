@@ -1,6 +1,6 @@
 from modules.get_chain_and_rpc import user_input_chain
 from app.check_balance import TokenBalanceChecker
-from app.swapper import main
+from app.swapper import SwapManager
 import asyncio
 
 def menu():
@@ -17,6 +17,6 @@ def menu():
         if choises == '1':
             asyncio.run(TokenBalanceChecker.main())
         if choises == '2':
-            main()
+            SwapManager.main()
         if choises == '3':
             break
